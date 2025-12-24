@@ -2,20 +2,30 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { loginUser } from '@/app/lib/api'; // Adjust the path if your api.js is elsewhere
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // Optional: to disable button while logging in
   const router = useRouter();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin') {
-      localStorage.setItem('isLoggedIn', 'true');
-      router.push('/dashboard');
-    } else {
-      setError('Invalid credentials. Try admin / admin');
+    setError('');
+    setLoading(true);
+
+    try {
+      const { success } = await loginUser(username, password);
+
+      if (success) {
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -30,6 +40,7 @@ export default function LoginPage() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            disabled={loading}
           />
           <input
             type="password"
@@ -37,11 +48,15 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loading}
           />
-          <button type="submit">Login</button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
         {error && <p className="error">{error}</p>}
-        <p className="hint">Hint: admin / admin</p>
+        {/* You can remove or comment out the hint in production */}
+        <p className="hint">Hint: Use your clinic credentials</p>
       </div>
     </div>
   );

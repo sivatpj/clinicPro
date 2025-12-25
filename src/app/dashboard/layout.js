@@ -1,22 +1,40 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';   
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
+  const [isClientReady, setIsClientReady] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // Run once on mount – only in browser
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!isLoggedIn) {
-      router.push('/login');
+    setIsClientReady(true);
+
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    setIsLoggedIn(loggedIn);
+
+    if (!loggedIn) {
+      router.replace('/login');  
     }
   }, [router]);
 
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  if (!isClientReady) {
+    return (
+      <div style={{ padding: '100px', textAlign: 'center', color: '#666' }}>
+        Loading dashboard...
+      </div>
+    );
+  }
+  
   if (!isLoggedIn) {
-    return <div style={{ padding: '50px', textAlign: 'center' }}>Redirecting to login...</div>;
+    return (
+      <div style={{ padding: '50px', textAlign: 'center' }}>
+        Redirecting to login...
+      </div>
+    );
   }
 
   return (
